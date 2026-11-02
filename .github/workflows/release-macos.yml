@@ -1,0 +1,39 @@
+name: Package macOS release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build
+        required: true
+        default: v0.1.0
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: macos-14
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - name: Install Rust
+        run: rustup update stable --no-self-update && rustup default stable
+      - name: Verify and package
+        run: |
+          cargo test --locked
+          ./scripts/package-macos.sh
+      - name: Name and verify asset
+        run: |
+          architecture="$(uname -m)"
+          asset="MiniMTP-${RELEASE_TAG}-macos-${architecture}.zip"
+          cp dist/MiniMTP-macos.zip "dist/${asset}"
+          cd dist
+          shasum -a 256 "$asset" > "SHA256SUMS-${architecture}.txt"
+      - name: Upload release assets
+        run: gh release upload "$RELEASE_TAG" dist/MiniMTP-"$RELEASE_TAG"-macos-*.zip dist/SHA256SUMS-*.txt --repo "$GITHUB_REPOSITORY" --clobber
