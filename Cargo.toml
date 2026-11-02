@@ -1,0 +1,27 @@
+[package]
+name = "minimtp"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "A small cross-platform MTP file transfer app"
+license = "MIT"
+
+[dependencies]
+mtp-rs = "=0.34.3"
+futures = { version = "0.3", features = ["executor"] }
+bytes = "1"
+eframe = { version = "0.31", default-features = false, features = ["default_fonts", "glow", "x11", "wayland"] }
+rfd = { version = "0.15", default-features = false, features = ["xdg-portal", "async-std"] }
+
+[features]
+virtual-device = ["mtp-rs/virtual-device"]
+
+[dev-dependencies]
+mtp-rs = { version = "=0.34.3", features = ["virtual-device"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
